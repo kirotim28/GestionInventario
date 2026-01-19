@@ -15,7 +15,15 @@ export async function PATCH(
     }
 
     const params = await context.params
-    const id = parseInt(params.id)
+    const id = parseInt(params.id, 10)
+    
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "ID de activo inválido" },
+        { status: 400 }
+      )
+    }
+    
     const body = await request.json()
     const { estado, responsable_id } = body
 
@@ -76,7 +84,14 @@ export async function DELETE(
     }
 
     const params = await context.params
-    const id = parseInt(params.id)
+    const id = parseInt(params.id, 10)
+    
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "ID de activo inválido" },
+        { status: 400 }
+      )
+    }
 
     await prisma.asset.delete({
       where: { id }
