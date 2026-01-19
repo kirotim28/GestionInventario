@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma"
 // PATCH /api/assets/[id] - Update asset status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -14,6 +14,7 @@ export async function PATCH(
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
+    const params = await context.params
     const id = parseInt(params.id)
     const body = await request.json()
     const { estado, responsable_id } = body
@@ -66,7 +67,7 @@ export async function PATCH(
 // DELETE /api/assets/[id] - Delete asset
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -74,6 +75,7 @@ export async function DELETE(
       return NextResponse.json({ error: "No autorizado" }, { status: 403 })
     }
 
+    const params = await context.params
     const id = parseInt(params.id)
 
     await prisma.asset.delete({
