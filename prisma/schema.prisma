@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  ENCARGADO
+  USUARIO
+}
+
+enum UserStatus {
+  ACTIVO
+  SUSPENDIDO
+}
+
+enum AssetStatus {
+  DISPONIBLE
+  RESERVADO
+  REPARACION
+  BAJA
+  EN_REVISION
+}
+
+enum TicketType {
+  FALLA
+  MANTENIMIENTO
+  CONSULTA
+}
+
+// Models
+model User {
+  id                Int        @id @default(autoincrement())
+  nombre            String
+  email             String     @unique
+  password          String
+  rol               UserRole   @default(USUARIO)
+  estado            UserStatus @default(ACTIVO)
+  intentos_fallidos Int        @default(0)
+  bloqueado_hasta   DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  // Relations
+  assets_responsable Asset[]          @relation("AssetResponsable")
+  tickets            Ticket_Soporte[]
+  log_movimientos    Log_Movimiento[]
+
+  @@map("users")
+}
+
+model Asset {
+  id              Int         @id @default(autoincrement())
+  nombre          String
+  serie           String      @unique
+  categoria       String
+  ubicacion       String
+  estado          AssetStatus @default(DISPONIBLE)
+  responsable_id  Int?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  responsable     User?            @relation("AssetResponsable", fields: [responsable_id], references: [id])
+  tickets         Ticket_Soporte[]
+  log_movimientos Log_Movimiento[]
+
+  @@map("assets")
+}
+
+model Log_Movimiento {
+  id                Int      @id @default(autoincrement())
+  asset_id          Int
+  usuario_id        Int
+  estado_anterior   String?
+  estado_nuevo      String?
+  responsable_anterior_id Int?
+  responsable_nuevo_id    Int?
+  descripcion       String   @db.Text
+  fecha             DateTime @default(now())
+
+  // Relations
+  asset   Asset @relation(fields: [asset_id], references: [id])
+  usuario User  @relation(fields: [usuario_id], references: [id])
+
+  @@map("log_movimientos")
+}
+
+model Ticket_Soporte {
+  id          Int        @id @default(autoincrement())
+  activo_id   Int
+  usuario_id  Int
+  descripcion String     @db.Text
+  tipo        TicketType
+  estado      String     @default("ABIERTO")
+  fecha       DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  activo  Asset @relation(fields: [activo_id], references: [id])
+  usuario User  @relation(fields: [usuario_id], references: [id])
+
+  @@map("tickets_soporte")
+}
